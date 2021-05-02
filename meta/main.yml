@@ -1,10 +1,11 @@
 ---
 galaxy_info:
+  role_name: rockylinux_ami_builder
   author: Francois Dupoux
   description: Ansible role to build a custom Rocky Linux v8 AMI for AWS
   company: fdupoux
   license: GPLv2
-  min_ansible_version: 2.10
+  min_ansible_version: 2.10.0
   platforms:
   - name: EL
     versions:

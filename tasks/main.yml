@@ -1,11 +1,11 @@
 ---
 - import_tasks: 01_create.yml
-  tags: ['rockylinux-ami-builder','rockylinux-ami-builder-create']
+  tags: ['rockylinux-ami-builder', 'rockylinux-ami-builder-create']
 - import_tasks: 02_install.yml
   delegate_to: ami_builder
   become: true
-  tags: ['rockylinux-ami-builder','rockylinux-ami-builder-install']
+  tags: ['rockylinux-ami-builder', 'rockylinux-ami-builder-install']
 - import_tasks: 03_image.yml
-  tags: ['rockylinux-ami-builder','rockylinux-ami-builder-image']
+  tags: ['rockylinux-ami-builder', 'rockylinux-ami-builder-image']
 - import_tasks: 04_cleanup.yml
-  tags: ['rockylinux-ami-builder','rockylinux-ami-builder-cleanup']
+  tags: ['rockylinux-ami-builder', 'rockylinux-ami-builder-cleanup']
