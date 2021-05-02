@@ -1,0 +1,35 @@
+---
+# Users may want to override the following parameters
+rockylinux_ami_builder_aws_region: 'eu-west-1'
+rockylinux_ami_builder_aws_access_key: "{{ lookup('env','AWS_ACCESS_KEY') }}"
+rockylinux_ami_builder_aws_secret_key: "{{ lookup('env','AWS_SECRET_KEY') }}"
+rockylinux_ami_builder_ec2_keypair: ""
+rockylinux_ami_builder_vgname: "vgmain"
+rockylinux_ami_builder_disksize: '8'
+rockylinux_ami_builder_disktype: 'gp2'
+rockylinux_ami_builder_rootsize: '4096M'
+rockylinux_ami_builder_bootsize: '512M'
+rockylinux_ami_builder_username: 'rocky'
+
+# EC2 instance type of the temporary instance used to build the new AMI
+rockylinux_ami_builder_ec2_type: "t2.nano"
+
+# Which name and tags to set on the new AMI
+rockylinux_ami_builder_ami_name: "ami_rockylinux8_custom"
+rockylinux_ami_builder_ami_tags:
+  description: 'Custom Rocky-Linux v8 image'
+  ami_type: 'minimal'
+  os_name: 'rockylinux'
+  os_majver: '8'
+
+# Range of addresses which are authorised to connect to the temporary instance (eg: "${your_home_ip}/32")
+rockylinux_ami_builder_allowip: '0.0.0.0/0'
+
+# Users should not have to override the following parameters
+rockylinux_ami_builder_disk2dev: '/dev/xvdf'
+rockylinux_ami_builder_disk2mnt: '/mnt/root'
+rockylinux_ami_builder_stack_name: 'stack-ami-builder'
+rockylinux_ami_builder_stack_cidrbase: '10.89'
+
+# Address of the package repository
+rockylinux_ami_builder_baseurl: "https://download.rockylinux.org/pub/rocky/8/BaseOS/x86_64/os/Packages"

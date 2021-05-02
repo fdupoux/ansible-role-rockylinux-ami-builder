@@ -1,0 +1,8 @@
+---
+- name: Destroy temporary stack
+  cloudformation:
+    aws_access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
+    aws_secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
+    region: "{{ rockylinux_ami_builder_aws_region }}"
+    stack_name: "{{ rockylinux_ami_builder_stack_name }}"
+    state: "absent"

@@ -1,0 +1,69 @@
+---
+- name: Determine timestamp
+  set_fact:
+    timestamp: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
+
+- name: Determine full name of the new AMI
+  set_fact:
+    rockylinux_ami_builder_ami_fullname: "{{ rockylinux_ami_builder_ami_name }}_{{ timestamp }}"
+
+- name: Determine default tags of the new AMI
+  set_fact:
+    rockylinux_ami_builder_ami_deftags:
+      Name: "{{ rockylinux_ami_builder_ami_fullname }}"
+      ctime: "{{ timestamp }}"
+
+- name: Stop the temporary instance
+  ec2:
+    aws_access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
+    aws_secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
+    region: "{{ rockylinux_ami_builder_aws_region }}"
+    instance_id: "{{ rockylinux_ami_builder_ec2_instance_id }}"
+    state: stopped
+    wait: True
+
+- name: Create a snapshot of the secondary volume
+  ec2_snapshot:
+    aws_access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
+    aws_secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
+    region: "{{ rockylinux_ami_builder_aws_region }}"
+    volume_id: "{{ rockylinux_ami_builder_ebs_secondary_id }}"
+    description: "{{ rockylinux_ami_builder_ami_fullname }}"
+    snapshot_tags: "{{ rockylinux_ami_builder_ami_deftags | combine(rockylinux_ami_builder_ami_tags) }}"
+    wait: yes
+  register: mysnap
+
+- name: Create AMI from the temporary instance using the secondary volume
+  ec2_ami:
+    aws_access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
+    aws_secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
+    region: "{{ rockylinux_ami_builder_aws_region }}"
+    name: "{{ rockylinux_ami_builder_ami_fullname }}"
+    state: present
+    architecture: x86_64
+    virtualization_type: hvm
+    root_device_name: "/dev/sda1"
+    device_mapping:
+      - device_name: "/dev/sda1"
+        snapshot_id: "{{ mysnap.snapshot_id }}"
+        size: "{{ rockylinux_ami_builder_disksize }}"
+        volume_type: "{{ rockylinux_ami_builder_disktype }}"
+        delete_on_termination: true
+  register: myami
+
+- name: Show resulting AMI v1
+  debug: msg="AMI has been created with ID {{ myami.image_id }}"
+
+- name: Save ID of the new AMI to a local file so it can be used as an artifact
+  local_action: copy
+  args:
+    content: "{{ myami.image_id }}"
+    dest: "{{ role_path }}/target/ami_id.txt"
+
+- name: Destroy secondary root volume of the temporary instance
+  ec2_vol:
+    aws_access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
+    aws_secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
+    region: "{{ rockylinux_ami_builder_aws_region }}"
+    id: "{{ rockylinux_ami_builder_ebs_secondary_id }}"
+    state: "absent"

@@ -1,0 +1,79 @@
+---
+- name: Create temporary VPC and EC2 instance for creating the AMI
+  cloudformation:
+    aws_access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
+    aws_secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
+    stack_name: "{{ rockylinux_ami_builder_stack_name }}"
+    state: "present"
+    region: "{{ rockylinux_ami_builder_aws_region }}"
+    template: "{{ role_path }}/files/temp-vpc-with-temp-ec2.json"
+    template_parameters:
+      StackName: "{{ rockylinux_ami_builder_stack_name }}"
+      InstanceType: "{{ rockylinux_ami_builder_ec2_type }}"
+      AwsRegion: "{{ rockylinux_ami_builder_aws_region }}"
+      DiskDevice: "{{ rockylinux_ami_builder_disk2dev }}"
+      DiskSizeGb: "{{ rockylinux_ami_builder_disksize }}"
+      KeyName: "{{ rockylinux_ami_builder_ec2_keypair }}"
+      SSHLocation: "{{ rockylinux_ami_builder_allowip }}"
+      CidrBase: "{{ rockylinux_ami_builder_stack_cidrbase }}"
+  register: stack_data
+
+- name: Wait for the temporary EC2 instance to be ready
+  wait_for:
+    delay: 3
+    host: "{{ stack_data.stack_outputs.Ec2PublicIpAddr }}"
+    port: 22
+    search_regex: OpenSSH
+    timeout: 180
+
+- name: Add temporary EC2 instance to inventory
+  add_host:
+    ansible_connection: ssh
+    ansible_ssh_host: "{{ stack_data.stack_outputs.Ec2PublicIpAddr }}"
+    ansible_ssh_user: centos
+    hostname: ami_builder
+    name: ami_builder
+
+- name: Get ID of root EBS volumes
+  ec2_vol_info:
+    aws_access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
+    aws_secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
+    region: "{{ rockylinux_ami_builder_aws_region }}"
+    filters:
+      attachment.instance-id: "{{ stack_data.stack_outputs.Ec2InstanceId }}"
+      attachment.status: "attached"
+      attachment.device: "/dev/sda1"
+  register: fact_ebs_root
+
+- name: Get ID of secondary EBS volumes
+  ec2_vol_info:
+    aws_access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
+    aws_secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
+    region: "{{ rockylinux_ami_builder_aws_region }}"
+    filters:
+      attachment.instance-id: "{{ stack_data.stack_outputs.Ec2InstanceId }}"
+      attachment.status: "attached"
+      attachment.device: "/dev/xvdf"
+  register: fact_ebs_secondary
+
+- set_fact:
+    rockylinux_ami_builder_ebs_root_id: '{{ fact_ebs_root.volumes.0.id }}'
+    rockylinux_ami_builder_ebs_secondary_id: '{{ fact_ebs_secondary.volumes.0.id }}'
+    rockylinux_ami_builder_ec2_public_addr: '{{ stack_data.stack_outputs.Ec2PublicIpAddr }}'
+    rockylinux_ami_builder_ec2_instance_id: '{{ stack_data.stack_outputs.Ec2InstanceId }}'
+    rockylinux_ami_builder_vpc_id: '{{ stack_data.stack_outputs.VpcId }}'
+
+- name: Show EIP of EC2 instance created by cloudformation
+  debug: msg="The EIP of the temporary instance is {{ rockylinux_ami_builder_ec2_public_addr }}"
+
+- name: Show ID of EC2 instance created by cloudformation
+  debug: msg="The ID of the temporary instance is {{ rockylinux_ami_builder_ec2_instance_id }}"
+
+- name: Show ID of VPC created by cloudformation
+  debug: msg="The ID of the temporary VPC is {{ rockylinux_ami_builder_vpc_id }}"
+
+- name: Show information about root ebs volume
+  debug: msg="The ID of the root EBS volume is {{ rockylinux_ami_builder_ebs_root_id }}"
+
+- name: Show information about secondary ebs volume
+  debug: msg="The ID of the secondary EBS volume is {{ rockylinux_ami_builder_ebs_secondary_id }}"

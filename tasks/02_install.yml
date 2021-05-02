@@ -1,0 +1,178 @@
+---
+- name: Dynamically get ID of the temporary EC2 instance
+  uri: return_content=yes url="http://169.254.169.254/latest/meta-data/instance-id"
+  register: instdata
+
+- name: Make sure these tasks run on the temporary EC2 instance
+  assert: that='"{{ instdata.content }}" == "{{ rockylinux_ami_builder_ec2_instance_id }}"'
+
+- name: Verify if selinux is enabled
+  shell: /sbin/getenforce
+  register: sestatus
+  changed_when: False
+
+- name: Disable selinux now if required
+  command: /sbin/setenforce 0
+  when: sestatus.stdout.find('Enforcing') == 0
+
+- name: Determine latest version of the rocky-release package
+  shell: set -e -o pipefail && curl --silent --location {{ rockylinux_ami_builder_baseurl }} | grep --only-matching 'rocky-release-8[^"]*.rpm' | tail -n1
+  register: regpkgrelease
+  changed_when: False
+
+- name: Determine latest version of the rocky-repos package
+  shell: set -e -o pipefail && curl --silent --location {{ rockylinux_ami_builder_baseurl }} | grep --only-matching 'rocky-repos-8[^"]*.rpm' | tail -n1
+  register: regpkgrepos
+  changed_when: False
+
+- name: Define name of packages
+  set_fact:
+    pkgrelease: "{{ regpkgrelease.stdout }}"
+    pkgrepos: "{{ regpkgrepos.stdout }}"
+
+- name: Show address of the latest version of the rocky-release package
+  debug: msg="{{ rockylinux_ami_builder_baseurl }}/{{ pkgrelease }}"
+
+- name: Show address of the latest version of the rocky-repos package
+  debug: msg="{{ rockylinux_ami_builder_baseurl }}/{{ pkgrepos }}"
+
+- name: Install system package
+  package:
+    name: ['parted', 'lvm2']
+    state: installed
+
+- name: Create mount point for chroot environment
+  file:
+    path: "{{ rockylinux_ami_builder_disk2mnt }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Check there is a second EBS Volume
+  shell: ls -lh {{ rockylinux_ami_builder_disk2dev }}
+
+- name: Create new partition table on the second EBS Volume
+  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} mklabel msdos
+
+- name: Create boot partition on the new disk
+  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} mkpart primary ext3 1MB {{ rockylinux_ami_builder_bootsize }}
+
+- name: Create lvm partition on the new disk
+  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} mkpart primary ext4 {{ rockylinux_ami_builder_bootsize }} 100%
+
+- name: Set partition flags on boot
+  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} set 1 boot on
+
+- name: Set partition flags on lvm
+  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} set 2 lvm on
+
+- name: Create boot filesystem
+  shell: mkfs.ext3 -L boot {{ rockylinux_ami_builder_disk2dev }}1
+
+- name: Create LVM Physical-Volume
+  shell: pvcreate -ff --yes {{ rockylinux_ami_builder_disk2dev }}2
+
+- name: Create LVM Volume-Group
+  shell: vgcreate {{ rockylinux_ami_builder_vgname }} {{ rockylinux_ami_builder_disk2dev }}2
+
+- name: Create LVM Logical-Volume
+  shell: lvcreate --yes --wipesignatures=y --zero=y --name=root --size={{ rockylinux_ami_builder_rootsize }} {{ rockylinux_ami_builder_vgname }}
+
+- name: Create root filesystem
+  shell: mkfs.ext4 -L root /dev/{{ rockylinux_ami_builder_vgname }}/root
+
+- name: Mount new root filesystem
+  shell: mount /dev/disk/by-label/root {{ rockylinux_ami_builder_disk2mnt }}
+  args:
+    warn: false
+
+- name: Create important top-level directories
+  shell: mkdir -p {{ rockylinux_ami_builder_disk2mnt }}/{boot,dev,proc,sys,etc}
+  args:
+    warn: false
+
+- name: Mount boot filesystem
+  shell: mount /dev/disk/by-label/boot {{ rockylinux_ami_builder_disk2mnt }}/boot
+  args:
+    warn: false
+
+- name: Create important directories
+  shell: mkdir -p {{ rockylinux_ami_builder_disk2mnt }}{{ item }}
+  with_items:
+    - /var/lib/rpm
+    - /etc/sysconfig
+    - /etc/pki/rpm-gpg
+  args:
+    warn: false
+
+- name: Create /etc/resolv.conf for chrooted programs
+  shell: cp -a /etc/resolv.conf {{ rockylinux_ami_builder_disk2mnt }}/etc/resolv.conf
+
+- name: Initiate RPM database in chroot environment
+  shell: rpm --rebuilddb --root={{ rockylinux_ami_builder_disk2mnt }}
+  args:
+    warn: false
+
+- name: Create GPG key files
+  copy: src={{ item }} dest={{ rockylinux_ami_builder_disk2mnt }}/etc/pki/rpm-gpg/{{ item }}
+  with_items:
+    - RPM-GPG-KEY-rockyofficial
+
+- name: Install initial package
+  shell: rpm -i --root={{ rockylinux_ami_builder_disk2mnt }} --nodeps {{ item }}
+  args:
+    warn: false
+  with_items:
+    - "{{ rockylinux_ami_builder_baseurl }}/{{ pkgrelease }}"
+    - "{{ rockylinux_ami_builder_baseurl }}/{{ pkgrepos }}"
+
+- name: Prepare chroot environment mounts
+  shell: mount --bind /{{ item }} {{ rockylinux_ami_builder_disk2mnt }}/{{ item }}
+  with_items: ['proc', 'dev', 'sys']
+  args:
+    warn: false
+
+- name: Install base of the system in chroot environment
+  shell: dnf --releasever=8 --installroot={{ rockylinux_ami_builder_disk2mnt }} install -y --nogpgcheck rpm-build yum
+  args:
+    warn: false
+
+- name: Install base package groups in chroot environment
+  shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/dnf -y groupinstall base core
+
+- name: Install cloud-init and cloud-utils-growpart
+  shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/dnf -y install epel-release cloud-init cloud-utils-growpart
+
+- name: Create important configuration files
+  template: src={{ item }}.j2 dest={{ rockylinux_ami_builder_disk2mnt }}/{{ item }}
+  with_items:
+    - etc/sysconfig/network-scripts/ifcfg-eth0
+    - etc/sysconfig/network
+    - etc/ssh/sshd_config
+    - etc/cloud/cloud.cfg
+    - etc/selinux/config
+    - etc/default/grub
+    - etc/fstab
+
+- name: Install kernel and grub packages
+  shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/dnf -y install kernel kernel-devel grub2 grubby grub2-tools
+
+- name: Generate grub2 configuration file
+  shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
+
+- name: Execute grub2 installer
+  shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /sbin/grub2-install {{ rockylinux_ami_builder_disk2dev }}
+
+- name: Clean installation packages
+  shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/dnf clean all
+
+- name: Unmount chroot environment mounts
+  shell: umount {{ rockylinux_ami_builder_disk2mnt }}/{{ item }}
+  with_items: ['proc', 'dev', 'sys', 'boot']
+
+- name: Unmount chroot environment root
+  shell: umount {{ rockylinux_ami_builder_disk2mnt }}
+
+- name: Stop accessing LVM Logical-Volumes
+  shell: vgchange -an {{ rockylinux_ami_builder_vgname }}

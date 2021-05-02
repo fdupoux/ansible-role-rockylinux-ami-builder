@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  author: Francois Dupoux
+  description: Ansible role to build a custom Rocky Linux v8 AMI for AWS
+  company: fdupoux
+  license: GPLv2
+  min_ansible_version: 2.10
+  platforms:
+  - name: EL
+    versions:
+    - 8
+  galaxy_tags:
+    - ami
+dependencies: []
