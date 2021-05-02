@@ -45,7 +45,7 @@ corresponding EBS snapshot remain.
 
 ## How to use it
    * Install this role using ansible-galaxy
-     https://galaxy.ansible.com/fdupoux/ansible_role_rockylinux_ami_builder
+     https://galaxy.ansible.com/fdupoux/rockylinux_ami_builder
    * Manually create an EC2 t2.micro instance from an official CentOS v8 AMI to
      authorize the use of these AMI in your AWS account
    * Use this role from an ansible playbook and make sure you pass all the
