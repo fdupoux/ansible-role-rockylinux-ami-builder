@@ -56,7 +56,7 @@
   shell: parted --script {{ rockylinux_ami_builder_disk2dev }} mklabel msdos
 
 - name: Create boot partition on the new disk
-  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} mkpart primary ext3 1MB {{ rockylinux_ami_builder_bootsize }}
+  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} mkpart primary ext4 1MB {{ rockylinux_ami_builder_bootsize }}
 
 - name: Create lvm partition on the new disk
   shell: parted --script {{ rockylinux_ami_builder_disk2dev }} mkpart primary ext4 {{ rockylinux_ami_builder_bootsize }} 100%
@@ -68,7 +68,7 @@
   shell: parted --script {{ rockylinux_ami_builder_disk2dev }} set 2 lvm on
 
 - name: Create boot filesystem
-  shell: mkfs.ext3 -L boot {{ rockylinux_ami_builder_disk2dev }}1
+  shell: mkfs.ext4 -L boot {{ rockylinux_ami_builder_disk2dev }}1
 
 - name: Create LVM Physical-Volume
   shell: pvcreate -ff --yes {{ rockylinux_ami_builder_disk2dev }}2
