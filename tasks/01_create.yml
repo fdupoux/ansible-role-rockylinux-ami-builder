@@ -30,7 +30,7 @@
   add_host:
     ansible_connection: ssh
     ansible_ssh_host: "{{ stack_data.stack_outputs.Ec2PublicIpAddr }}"
-    ansible_ssh_user: centos
+    ansible_ssh_user: rocky
     hostname: ami_builder
     name: ami_builder
 

@@ -27,26 +27,25 @@ This Ansible role comes with the following requirements:
    * An AWS Account where to execute the creation of the AMI
    * An access key pair with enough privileges to execute ec2 and cloudformation
      operations
-   * Permission to launch an official CentOS v8 AMI from the AWS Marketplace
+   * Permission to launch an official RockyLinux v8 AMI from the AWS Marketplace
      The best thing to do is to manually create a t2.nano instance and to
      destroy it immediately as this process will ask for the permission to
      launch such instances in your AWS Account:
-     https://wiki.centos.org/Cloud/AWS
+     https://aws.amazon.com/marketplace/pp/prodview-2otariyxb3mqu
 
 ## How it works
 This Ansible role works by first using Cloud Formations to create a temporary
 stack in your AWS Account which contains a VPC and an EC2 instance. This
-instance is running an official CentOS image (as there is no official Rocky
-Linux AMI yet) and the new Rocky Linux operating system will be installed on a
-secondary empty EBS volume. At the end of the installation the instance is
-stopped and the new AMI is created as an image of the secondary volume. The
-stack and all its resources are destroyed and only the new AMI and its
-corresponding EBS snapshot remain.
+instance is running an official RockyLinux image and the new RockyLinux
+operating system will be installed on a secondary empty EBS volume. At the end
+of the installation the instance is stopped and the new AMI is created as an
+image of the secondary volume. The stack and all its resources are destroyed
+and only the new AMI and its corresponding EBS snapshot remain.
 
 ## How to use it
    * Install this role using ansible-galaxy
      https://galaxy.ansible.com/fdupoux/rockylinux_ami_builder
-   * Manually create an EC2 t2.micro instance from an official CentOS v8 AMI to
+   * Manually create an EC2 t2.micro instance from an official RockyLinux AMI to
      authorize the use of these AMI in your AWS account
    * Use this role from an ansible playbook and make sure you pass all the
      important parameters which are defined in the defaults/main.yml file
