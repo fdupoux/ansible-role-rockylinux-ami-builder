@@ -12,7 +12,7 @@ rockylinux_ami_builder_bootsize: '512M'
 rockylinux_ami_builder_username: 'rocky'
 
 # EC2 instance type of the temporary instance used to build the new AMI
-rockylinux_ami_builder_ec2_type: "t3.micro"
+rockylinux_ami_builder_ec2_type: "t2.micro"
 
 # Which name and tags to set on the new AMI
 rockylinux_ami_builder_ami_name: "ami_rockylinux8_custom"
