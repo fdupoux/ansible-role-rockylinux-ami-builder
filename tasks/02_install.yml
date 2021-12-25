@@ -16,12 +16,12 @@
   when: sestatus.stdout.find('Enforcing') == 0
 
 - name: Determine latest version of the rocky-release package
-  shell: set -e -o pipefail && curl --silent --location {{ rockylinux_ami_builder_baseurl }} | grep --only-matching 'rocky-release-8[^"]*.rpm' | tail -n1
+  shell: set -e -o pipefail && curl --silent --location {{ rockylinux_ami_builder_baseurl }}/r | grep --only-matching 'rocky-release-8[^"]*.rpm' | tail -n1
   register: regpkgrelease
   changed_when: False
 
 - name: Determine latest version of the rocky-repos package
-  shell: set -e -o pipefail && curl --silent --location {{ rockylinux_ami_builder_baseurl }} | grep --only-matching 'rocky-repos-8[^"]*.rpm' | tail -n1
+  shell: set -e -o pipefail && curl --silent --location {{ rockylinux_ami_builder_baseurl }}/r | grep --only-matching 'rocky-repos-8[^"]*.rpm' | tail -n1
   register: regpkgrepos
   changed_when: False
 
@@ -31,10 +31,10 @@
     pkgrepos: "{{ regpkgrepos.stdout }}"
 
 - name: Show address of the latest version of the rocky-release package
-  debug: msg="{{ rockylinux_ami_builder_baseurl }}/{{ pkgrelease }}"
+  debug: msg="{{ rockylinux_ami_builder_baseurl }}/r/{{ pkgrelease }}"
 
 - name: Show address of the latest version of the rocky-repos package
-  debug: msg="{{ rockylinux_ami_builder_baseurl }}/{{ pkgrepos }}"
+  debug: msg="{{ rockylinux_ami_builder_baseurl }}/r/{{ pkgrepos }}"
 
 - name: Install system package
   package:
@@ -124,8 +124,8 @@
   args:
     warn: false
   with_items:
-    - "{{ rockylinux_ami_builder_baseurl }}/{{ pkgrelease }}"
-    - "{{ rockylinux_ami_builder_baseurl }}/{{ pkgrepos }}"
+    - "{{ rockylinux_ami_builder_baseurl }}/r/{{ pkgrelease }}"
+    - "{{ rockylinux_ami_builder_baseurl }}/r/{{ pkgrepos }}"
 
 - name: Prepare chroot environment mounts
   shell: mount --bind /{{ item }} {{ rockylinux_ami_builder_disk2mnt }}/{{ item }}
