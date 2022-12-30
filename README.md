@@ -27,11 +27,11 @@ This Ansible role comes with the following requirements:
    * An AWS Account where to execute the creation of the AMI
    * An access key pair with enough privileges to execute ec2 and cloudformation
      operations
-   * Permission to launch an official RockyLinux v8 AMI from the AWS Marketplace
+   * Permission to launch an official RockyLinux v9 AMI from the AWS Marketplace
      The best thing to do is to manually create a t2.nano instance and to
      destroy it immediately as this process will ask for the permission to
      launch such instances in your AWS Account:
-     https://aws.amazon.com/marketplace/pp/prodview-2otariyxb3mqu
+     https://aws.amazon.com/marketplace/pp/prodview-ygp66mwgbl2ii
 
 ## How it works
 This Ansible role works by first using Cloud Formations to create a temporary
