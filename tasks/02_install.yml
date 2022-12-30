@@ -16,12 +16,12 @@
   when: sestatus.stdout.find('Enforcing') == 0
 
 - name: Determine latest version of the rocky-release package
-  shell: set -e -o pipefail && curl --silent --location {{ rockylinux_ami_builder_baseurl }}/r | grep --only-matching 'rocky-release-8[^"]*.rpm' | tail -n1
+  shell: set -e -o pipefail && curl --silent --location {{ rockylinux_ami_builder_baseurl }}/r | grep --only-matching 'rocky-release-9[^"]*.rpm' | tail -n1
   register: regpkgrelease
   changed_when: False
 
 - name: Determine latest version of the rocky-repos package
-  shell: set -e -o pipefail && curl --silent --location {{ rockylinux_ami_builder_baseurl }}/r | grep --only-matching 'rocky-repos-8[^"]*.rpm' | tail -n1
+  shell: set -e -o pipefail && curl --silent --location {{ rockylinux_ami_builder_baseurl }}/r | grep --only-matching 'rocky-repos-9[^"]*.rpm' | tail -n1
   register: regpkgrepos
   changed_when: False
 
@@ -118,6 +118,7 @@
   copy: src={{ item }} dest={{ rockylinux_ami_builder_disk2mnt }}/etc/pki/rpm-gpg/{{ item }}
   with_items:
     - RPM-GPG-KEY-rockyofficial
+    - RPM-GPG-KEY-Rocky-9
 
 - name: Install initial package
   shell: rpm -i --root={{ rockylinux_ami_builder_disk2mnt }} --nodeps {{ item }}
@@ -134,7 +135,7 @@
     warn: false
 
 - name: Install base of the system in chroot environment
-  shell: dnf --releasever=8 --installroot={{ rockylinux_ami_builder_disk2mnt }} install -y --nogpgcheck rpm-build yum
+  shell: dnf --releasever=9 --installroot={{ rockylinux_ami_builder_disk2mnt }} install -y --nogpgcheck rpm-build yum
   args:
     warn: false
 
