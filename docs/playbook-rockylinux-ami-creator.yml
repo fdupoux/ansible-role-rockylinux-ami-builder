@@ -1,5 +1,5 @@
 ---
-- name: Example to show how to create a custom Rocky-Linux v8 AMI
+- name: Example to show how to create a custom Rocky-Linux v9 AMI
   hosts: localhost
 
   roles:
