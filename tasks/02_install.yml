@@ -148,7 +148,6 @@
 - name: Create important configuration files
   template: src={{ item }}.j2 dest={{ rockylinux_ami_builder_disk2mnt }}/{{ item }}
   with_items:
-    - etc/sysconfig/network-scripts/ifcfg-eth0
     - etc/sysconfig/network
     - etc/ssh/sshd_config
     - etc/cloud/cloud.cfg
