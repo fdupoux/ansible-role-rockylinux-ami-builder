@@ -99,5 +99,5 @@ system_info:
    ssh_svcname: sshd
 
 runcmd:
- - growpart /dev/xvda 2
- - pvresize /dev/xvda2
+ - growpart /dev/nvme0n1 2
+ - pvresize /dev/nvme0n1p2

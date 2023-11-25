@@ -68,13 +68,13 @@
   shell: parted --script {{ rockylinux_ami_builder_disk2dev }} set 2 lvm on
 
 - name: Create boot filesystem
-  shell: mkfs.ext4 -L boot {{ rockylinux_ami_builder_disk2dev }}1
+  shell: mkfs.ext4 -L boot {{ rockylinux_ami_builder_disk2dev }}p1
 
 - name: Create LVM Physical-Volume
-  shell: pvcreate -ff --yes {{ rockylinux_ami_builder_disk2dev }}2
+  shell: pvcreate -ff --yes {{ rockylinux_ami_builder_disk2dev }}p2
 
 - name: Create LVM Volume-Group
-  shell: vgcreate {{ rockylinux_ami_builder_vgname }} {{ rockylinux_ami_builder_disk2dev }}2
+  shell: vgcreate {{ rockylinux_ami_builder_vgname }} {{ rockylinux_ami_builder_disk2dev }}p2
 
 - name: Create LVM Logical-Volume
   shell: lvcreate --yes --wipesignatures=y --zero=y --name=root --size={{ rockylinux_ami_builder_rootsize }} {{ rockylinux_ami_builder_vgname }}
@@ -148,7 +148,6 @@
 - name: Create important configuration files
   template: src={{ item }}.j2 dest={{ rockylinux_ami_builder_disk2mnt }}/{{ item }}
   with_items:
-    - etc/sysconfig/network-scripts/ifcfg-eth0
     - etc/sysconfig/network
     - etc/ssh/sshd_config
     - etc/cloud/cloud.cfg

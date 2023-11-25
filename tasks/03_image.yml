@@ -42,6 +42,7 @@
     state: present
     architecture: x86_64
     virtualization_type: hvm
+    enhanced_networking: true
     root_device_name: "/dev/sda1"
     device_mapping:
       - device_name: "/dev/sda1"

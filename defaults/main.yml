@@ -12,7 +12,7 @@ rockylinux_ami_builder_bootsize: '512M'
 rockylinux_ami_builder_username: 'rocky'
 
 # EC2 instance type of the temporary instance used to build the new AMI
-rockylinux_ami_builder_ec2_type: "t2.small"
+rockylinux_ami_builder_ec2_type: "t3.small"
 
 # Which name and tags to set on the new AMI
 rockylinux_ami_builder_ami_name: "ami_rockylinux9_custom"
@@ -26,7 +26,8 @@ rockylinux_ami_builder_ami_tags:
 rockylinux_ami_builder_allowip: '0.0.0.0/0'
 
 # Users should not have to override the following parameters
-rockylinux_ami_builder_disk2dev: '/dev/xvdf'
+rockylinux_ami_builder_disk2name: '/dev/xvdf'
+rockylinux_ami_builder_disk2dev: '/dev/nvme1n1'
 rockylinux_ami_builder_disk2mnt: '/mnt/root'
 rockylinux_ami_builder_stack_name: 'stack-ami-builder'
 rockylinux_ami_builder_stack_cidrbase: '10.89'
