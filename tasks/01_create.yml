@@ -11,7 +11,7 @@
       StackName: "{{ rockylinux_ami_builder_stack_name }}"
       InstanceType: "{{ rockylinux_ami_builder_ec2_type }}"
       AwsRegion: "{{ rockylinux_ami_builder_aws_region }}"
-      DiskDevice: "{{ rockylinux_ami_builder_disk2dev }}"
+      DiskDevice: "{{ rockylinux_ami_builder_disk2name }}"
       DiskSizeGb: "{{ rockylinux_ami_builder_disksize }}"
       KeyName: "{{ rockylinux_ami_builder_ec2_keypair }}"
       SSHLocation: "{{ rockylinux_ami_builder_allowip }}"
@@ -53,7 +53,7 @@
     filters:
       attachment.instance-id: "{{ stack_data.stack_outputs.Ec2InstanceId }}"
       attachment.status: "attached"
-      attachment.device: "/dev/xvdf"
+      attachment.device: "{{ rockylinux_ami_builder_disk2name }}"
   register: fact_ebs_secondary
 
 - name: Define essential variables about EC2 objects
