@@ -6,10 +6,12 @@ rockylinux_ami_builder_aws_secret_key: "{{ lookup('env','AWS_SECRET_KEY') }}"
 rockylinux_ami_builder_ec2_keypair: ""
 rockylinux_ami_builder_vgname: "vgmain"
 rockylinux_ami_builder_disksize: '8'
-rockylinux_ami_builder_disktype: 'gp2'
+rockylinux_ami_builder_disktype: 'gp3'
 rockylinux_ami_builder_rootsize: '4096M'
-rockylinux_ami_builder_bootsize: '512M'
 rockylinux_ami_builder_username: 'rocky'
+
+# Architecture for which to build the AMI (must be either 'x86_64' or 'arm64')
+rockylinux_ami_builder_architecture: 'x86_64'
 
 # EC2 instance type of the temporary instance used to build the new AMI
 rockylinux_ami_builder_ec2_type: "t3.small"
@@ -32,5 +34,11 @@ rockylinux_ami_builder_disk2mnt: '/mnt/root'
 rockylinux_ami_builder_stack_name: 'stack-ami-builder'
 rockylinux_ami_builder_stack_cidrbase: '10.89'
 
+# Architectures mappings
+rockylinux_ami_builder_arch1dict: {"x86_64":"x86_64", "arm64":"aarch64"}
+rockylinux_ami_builder_arch2dict: {"x86_64":"amd64", "arm64":"arm64"}
+rockylinux_ami_builder_rpmarch: "{{ rockylinux_ami_builder_arch1dict[rockylinux_ami_builder_architecture] }}"
+rockylinux_ami_builder_tplarch: "{{ rockylinux_ami_builder_arch2dict[rockylinux_ami_builder_architecture] }}"
+
 # Address of the package repository
-rockylinux_ami_builder_baseurl: "https://download.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/Packages"
+rockylinux_ami_builder_baseurl: "https://download.rockylinux.org/pub/rocky/9/BaseOS/{{ rockylinux_ami_builder_rpmarch }}/os/Packages"

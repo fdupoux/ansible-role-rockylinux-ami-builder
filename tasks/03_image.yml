@@ -40,7 +40,7 @@
     region: "{{ rockylinux_ami_builder_aws_region }}"
     name: "{{ rockylinux_ami_builder_ami_fullname }}"
     state: present
-    architecture: x86_64
+    architecture: "{{ rockylinux_ami_builder_architecture }}"
     virtualization_type: hvm
     enhanced_networking: true
     root_device_name: "/dev/sda1"

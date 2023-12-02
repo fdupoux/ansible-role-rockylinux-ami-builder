@@ -14,13 +14,20 @@
       "Description" : "Temporary EC2 instance type",
       "Type" : "String",
       "Default" : "t3.small",
-      "AllowedValues" : ["t3.micro", "t3.small", "t3.medium", "t3.large", "t3.xlarge"],
-      "ConstraintDescription" : "Must be a supported t3 ec2 instance type."
+      "AllowedValues" : ["t3.micro", "t3.small", "t3.medium", "t3.large", "t4g.micro", "t4g.small", "t4g.medium", "t4g.large"],
+      "ConstraintDescription" : "Must be a supported t3 or t4g instance type."
     },
 
     "AwsRegion": {
       "Description" : "Region where to create the resources",
       "Type" : "String"
+    },
+
+    "Architecture": {
+      "Description" : "Architecture of the AMI to build (either 'amd64' or 'arm64')",
+      "Type" : "String",
+      "Default" : "amd64",
+      "AllowedValues" : ["amd64", "arm64"]
     },
 
     "KeyName": {
@@ -58,29 +65,24 @@
 
   "Mappings" : {
     "AwsRegion2RockyLinuxAmi" : {
-      "us-east-1"        : {"RockyLinuxAmi" : "ami-0cce0fd28f5ae1c16"},
-      "us-east-2"        : {"RockyLinuxAmi" : "ami-013b70fe77d288975"},
-      "us-west-1"        : {"RockyLinuxAmi" : "ami-0565bb3165a897d89"},
-      "us-west-2"        : {"RockyLinuxAmi" : "ami-003100cf7f2c7c335"},
-      "af-south-1"       : {"RockyLinuxAmi" : "ami-0a80a99c381015ebc"},
-      "ap-east-1"        : {"RockyLinuxAmi" : "ami-07511107f64b24069"},
-      "ap-south-1"       : {"RockyLinuxAmi" : "ami-0513a35b6dde0be00"},
-      "ap-northeast-1"   : {"RockyLinuxAmi" : "ami-054929b521ab4b542"},
-      "ap-northeast-2"   : {"RockyLinuxAmi" : "ami-0181531710ee41148"},
-      "ap-northeast-3"   : {"RockyLinuxAmi" : "ami-0f2f53e190dc1dc4f"},
-      "ap-southeast-1"   : {"RockyLinuxAmi" : "ami-0255a102dbb96cef7"},
-      "ap-southeast-2"   : {"RockyLinuxAmi" : "ami-02da9facaa1d0b6bd"},
-      "ap-southeast-3"   : {"RockyLinuxAmi" : "ami-041f2e1830aaef14c"},
-      "ca-central-1"     : {"RockyLinuxAmi" : "ami-0b348d5e264c7d410"},
-      "eu-central-1"     : {"RockyLinuxAmi" : "ami-0414d15e93b201470"},
-      "eu-west-1"        : {"RockyLinuxAmi" : "ami-0da0f91219b2ab4c1"},
-      "eu-west-2"        : {"RockyLinuxAmi" : "ami-04fe632f7f0954fe7"},
-      "eu-west-3"        : {"RockyLinuxAmi" : "ami-06ca0d6ccc3e7a5ce"},
-      "eu-south-1"       : {"RockyLinuxAmi" : "ami-040aa80fac5b3330c"},
-      "eu-north-1"       : {"RockyLinuxAmi" : "ami-06c1cb612a06c3cff"},
-      "me-central-1"     : {"RockyLinuxAmi" : "ami-0817a73ca1752acd5"},
-      "me-south-1"       : {"RockyLinuxAmi" : "ami-013dbdc0a3e6b4c39"},
-      "sa-east-1"        : {"RockyLinuxAmi" : "ami-0ec9d7ece5f35188c"}
+      "us-east-1"        : {"amd64" : "ami-0cce0fd28f5ae1c16", "arm64" : "ami-00b0dcadee599a758"},
+      "us-east-2"        : {"amd64" : "ami-013b70fe77d288975", "arm64" : "ami-0a4ca78b119e1b2c4"},
+      "us-west-1"        : {"amd64" : "ami-0565bb3165a897d89", "arm64" : "ami-0613fcbcf8ac10955"},
+      "us-west-2"        : {"amd64" : "ami-0c6ad0cb888dc015a", "arm64" : "ami-0d591df4a537c24fc"},
+      "ap-south-1"       : {"amd64" : "ami-0513a35b6dde0be00", "arm64" : "ami-0cb24451efb0e807e"},
+      "ap-northeast-1"   : {"amd64" : "ami-054929b521ab4b542", "arm64" : "ami-01aa25ac6fa78cce1"},
+      "ap-northeast-2"   : {"amd64" : "ami-0181531710ee41148", "arm64" : "ami-02d35205aa1a0f6c9"},
+      "ap-northeast-3"   : {"amd64" : "ami-0f2f53e190dc1dc4f", "arm64" : "ami-0bcb5f23007ad2985"},
+      "ap-southeast-1"   : {"amd64" : "ami-0255a102dbb96cef7", "arm64" : "ami-0c7c89825e02c8db1"},
+      "ap-southeast-2"   : {"amd64" : "ami-02da9facaa1d0b6bd", "arm64" : "ami-036af2e62fdf543b9"},
+      "eu-central-1"     : {"amd64" : "ami-0414d15e93b201470", "arm64" : "ami-0ae0e088f1170391d"},
+      "eu-west-1"        : {"amd64" : "ami-06cce7b9e26e82474", "arm64" : "ami-0ba529caebf80385d"},
+      "eu-west-2"        : {"amd64" : "ami-04fe632f7f0954fe7", "arm64" : "ami-0723dd316a68a3ec8"},
+      "eu-west-3"        : {"amd64" : "ami-06ca0d6ccc3e7a5ce", "arm64" : "ami-000d7efc6c601dba8"},
+      "eu-north-1"       : {"amd64" : "ami-06c1cb612a06c3cff", "arm64" : "ami-0ef3b1b9aca44893b"},
+      "me-central-1"     : {"amd64" : "ami-0817a73ca1752acd5", "arm64" : "ami-0e6ec5db88f73d607"},
+      "me-south-1"       : {"amd64" : "ami-013dbdc0a3e6b4c39", "arm64" : "ami-03f1a5113ed8b2dd7"},
+      "sa-east-1"        : {"amd64" : "ami-0ec9d7ece5f35188c", "arm64" : "ami-0fe18ca139b0b5dde"}
     }
   },
 
@@ -168,7 +170,7 @@
       "Type" : "AWS::EC2::Instance",
       "DependsOn" : "AttachGateway",
       "Properties" : {
-        "ImageId" : { "Fn::FindInMap" : [ "AwsRegion2RockyLinuxAmi", { "Ref" : "AwsRegion" }, "RockyLinuxAmi"] },
+        "ImageId" : { "Fn::FindInMap" : [ "AwsRegion2RockyLinuxAmi", { "Ref" : "AwsRegion" }, { "Ref" : "Architecture" }] },
         "InstanceType" : { "Ref" : "InstanceType" },
         "KeyName" : { "Ref" : "KeyName" },
         "SubnetId" : { "Ref" : "Subnet" },
@@ -181,7 +183,7 @@
       "Type" : "AWS::EC2::Volume",
       "Properties" : {
         "Size" : { "Ref" : "DiskSizeGb" },
-        "VolumeType" : "gp2",
+        "VolumeType" : "gp3",
         "AvailabilityZone" : { "Fn::GetAtt" : [ "AmiBuilderInstance", "AvailabilityZone" ] }
       },
       "DeletionPolicy" : "Delete"

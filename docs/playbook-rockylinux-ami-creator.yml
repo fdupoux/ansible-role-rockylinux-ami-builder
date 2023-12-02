@@ -1,16 +1,31 @@
 ---
-- name: Example to show how to create a custom Rocky-Linux v9 AMI
+- name: Example to show how to create a custom Rocky-Linux v9 AMI for amd64
   hosts: localhost
 
   roles:
-    - role: rockylinux-ami-builder
+    - role: rockylinux-ami-builder-amd64
       rockylinux_ami_builder_aws_region: "eu-west-1"
       rockylinux_ami_builder_aws_access_key: "{{ lookup('env','AWS_ACCESS_KEY') }}"
       rockylinux_ami_builder_aws_secret_key: "{{ lookup('env','AWS_SECRET_KEY') }}"
-      rockylinux_ami_builder_ec2_keypair: "francois@home"
-      rockylinux_ami_builder_username: 'rockylinux'
+      rockylinux_ami_builder_ec2_keypair: "francois"
+      rockylinux_ami_builder_username: 'rocky'
       rockylinux_ami_builder_vgname: "vgmain"
       rockylinux_ami_builder_disksize: '8'
-      rockylinux_ami_builder_bootsize: '256M'
       rockylinux_ami_builder_rootsize: '4096M'
       rockylinux_ami_builder_allowip: '0.0.0.0/0'
+      rockylinux_ami_builder_ami_name: "ami_rockylinux9_amd64"
+      rockylinux_ami_builder_architecture: 'x86_64'
+      rockylinux_ami_builder_ec2_type: "t3.small"
+    - role: rockylinux-ami-builder-arm64
+      rockylinux_ami_builder_aws_region: "eu-west-1"
+      rockylinux_ami_builder_aws_access_key: "{{ lookup('env','AWS_ACCESS_KEY') }}"
+      rockylinux_ami_builder_aws_secret_key: "{{ lookup('env','AWS_SECRET_KEY') }}"
+      rockylinux_ami_builder_ec2_keypair: "francois"
+      rockylinux_ami_builder_username: 'rocky'
+      rockylinux_ami_builder_vgname: "vgmain"
+      rockylinux_ami_builder_disksize: '8'
+      rockylinux_ami_builder_rootsize: '4096M'
+      rockylinux_ami_builder_allowip: '0.0.0.0/0'
+      rockylinux_ami_builder_ami_name: "ami_rockylinux9_arm64"
+      rockylinux_ami_builder_architecture: 'arm64'
+      rockylinux_ami_builder_ec2_type: "t4g.small"
