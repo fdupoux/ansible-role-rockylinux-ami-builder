@@ -10,6 +10,7 @@
     template_parameters:
       StackName: "{{ rockylinux_ami_builder_stack_name }}"
       InstanceType: "{{ rockylinux_ami_builder_ec2_type }}"
+      Architecture: "{{ rockylinux_ami_builder_tplarch }}"
       AwsRegion: "{{ rockylinux_ami_builder_aws_region }}"
       DiskDevice: "{{ rockylinux_ami_builder_disk2name }}"
       DiskSizeGb: "{{ rockylinux_ami_builder_disksize }}"

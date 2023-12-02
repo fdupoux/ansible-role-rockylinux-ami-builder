@@ -184,13 +184,14 @@
     - etc/fstab
 
 - name: Install kernel and grub packages
-  shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/dnf -y install kernel kernel-devel grub2 grubby grub2-efi grub2-tools efibootmgr
+  shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/dnf -y install kernel kernel-devel grub2 grubby grub2-efi grub2-tools shim efibootmgr
 
 - name: Generate grub2 configuration file
   shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
 
-- name: Execute grub2 installer
+- name: Execute grub2 installer (for Legacy BIOS only)
   shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /sbin/grub2-install {{ rockylinux_ami_builder_disk2dev }}
+  when: rockylinux_ami_builder_architecture == 'x86_64'
 
 - name: Clean installation packages
   shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/dnf clean all
