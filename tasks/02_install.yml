@@ -38,8 +38,11 @@
 
 - name: Install system package
   package:
-    name: ['parted', 'lvm2']
+    name: ['parted', 'lvm2', 'dosfstools']
     state: installed
+
+- name: Stop grub from finding the system on the primary disk
+  shell: rm -f /etc/{os,redhat,rocky}-release*
 
 - name: Create mount point for chroot environment
   file:
@@ -53,28 +56,43 @@
   shell: ls -lh {{ rockylinux_ami_builder_disk2dev }}
 
 - name: Create new partition table on the second EBS Volume
-  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} mklabel msdos
+  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} mklabel gpt
+
+- name: Create efi partition on the new disk
+  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} mkpart uefi fat32 1MB 255M
+
+- name: Create bios partition on the new disk
+  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} mkpart bios fat16 255M 256M
 
 - name: Create boot partition on the new disk
-  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} mkpart primary ext4 1MB {{ rockylinux_ami_builder_bootsize }}
+  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} mkpart boot ext4 256M 1024M
 
 - name: Create lvm partition on the new disk
-  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} mkpart primary ext4 {{ rockylinux_ami_builder_bootsize }} 100%
+  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} mkpart lvm2 ext4 1024M 100%
 
-- name: Set partition flags on boot
-  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} set 1 boot on
+- name: Set partition flags on the efi system partition
+  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} set 1 esp on
 
-- name: Set partition flags on lvm
-  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} set 2 lvm on
+- name: Set partition flags on the bios partition
+  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} set 2 bios_grub on
+
+- name: Set partition flags on the lvm partition
+  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} set 4 lvm on
+
+- name: Print new disk layout
+  shell: parted --script {{ rockylinux_ami_builder_disk2dev }} print
+
+- name: Create efi-esp filesystem
+  shell: mkfs.fat -F 32 -n esp {{ rockylinux_ami_builder_disk2dev }}p1
 
 - name: Create boot filesystem
-  shell: mkfs.ext4 -L boot {{ rockylinux_ami_builder_disk2dev }}p1
+  shell: mkfs.ext4 -L boot {{ rockylinux_ami_builder_disk2dev }}p3
 
 - name: Create LVM Physical-Volume
-  shell: pvcreate -ff --yes {{ rockylinux_ami_builder_disk2dev }}p2
+  shell: pvcreate -ff --yes {{ rockylinux_ami_builder_disk2dev }}p4
 
 - name: Create LVM Volume-Group
-  shell: vgcreate {{ rockylinux_ami_builder_vgname }} {{ rockylinux_ami_builder_disk2dev }}p2
+  shell: vgcreate {{ rockylinux_ami_builder_vgname }} {{ rockylinux_ami_builder_disk2dev }}p4
 
 - name: Create LVM Logical-Volume
   shell: lvcreate --yes --wipesignatures=y --zero=y --name=root --size={{ rockylinux_ami_builder_rootsize }} {{ rockylinux_ami_builder_vgname }}
@@ -93,7 +111,17 @@
     warn: false
 
 - name: Mount boot filesystem
-  shell: mount /dev/disk/by-label/boot {{ rockylinux_ami_builder_disk2mnt }}/boot
+  shell: mount {{ rockylinux_ami_builder_disk2dev }}p3 {{ rockylinux_ami_builder_disk2mnt }}/boot
+  args:
+    warn: false
+
+- name: Create mount point for the esp filesystem
+  shell: mkdir -p {{ rockylinux_ami_builder_disk2mnt }}/boot/efi
+  args:
+    warn: false
+
+- name: Mount esp filesystem
+  shell: mount {{ rockylinux_ami_builder_disk2dev }}p1 {{ rockylinux_ami_builder_disk2mnt }}/boot/efi
   args:
     warn: false
 
@@ -156,7 +184,7 @@
     - etc/fstab
 
 - name: Install kernel and grub packages
-  shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/dnf -y install kernel kernel-devel grub2 grubby grub2-tools
+  shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/dnf -y install kernel kernel-devel grub2 grubby grub2-efi grub2-tools efibootmgr
 
 - name: Generate grub2 configuration file
   shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
@@ -169,7 +197,7 @@
 
 - name: Unmount chroot environment mounts
   shell: umount {{ rockylinux_ami_builder_disk2mnt }}/{{ item }}
-  with_items: ['proc', 'dev', 'sys', 'boot']
+  with_items: ['boot/efi', 'boot', 'proc', 'dev', 'sys']
 
 - name: Unmount chroot environment root
   shell: umount {{ rockylinux_ami_builder_disk2mnt }}
