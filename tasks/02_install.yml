@@ -196,6 +196,9 @@
 - name: Clean installation packages
   shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/dnf clean all
 
+- name: Disable the kdump service
+  shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/systemctl disable kdump
+
 - name: Unmount chroot environment mounts
   shell: umount {{ rockylinux_ami_builder_disk2mnt }}/{{ item }}
   with_items: ['boot/efi', 'boot', 'proc', 'dev', 'sys']
