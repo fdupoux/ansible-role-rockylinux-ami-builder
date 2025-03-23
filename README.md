@@ -55,9 +55,6 @@ and only the new AMI and its corresponding EBS snapshot remain.
      important parameters which are defined in the defaults/main.yml file.
      Please have a look at the example playbook provided in the docs folder
      for examples of parameters that can be used for x86_64 and arm64.
-   * After the AMI has been created, you should be able to connect to new
-     instances based on this AMI using SSH as the `rocky` user and with the
-     SSH keypair configured on the instance when you launched it.
 
 ## Ansible
 This role has been tested using Ansible 2.10.7 as provided with Alpine Linux
