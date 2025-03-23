@@ -4,7 +4,8 @@
   register: instdata
 
 - name: Make sure these tasks run on the temporary EC2 instance
-  assert: that='"{{ instdata.content }}" == "{{ rockylinux_ami_builder_ec2_instance_id }}"'
+  assert:
+    that: instdata.content == rockylinux_ami_builder_ec2_instance_id
 
 - name: Verify if selinux is enabled
   shell: /sbin/getenforce
@@ -102,28 +103,18 @@
 
 - name: Mount new root filesystem
   shell: mount /dev/disk/by-label/root {{ rockylinux_ami_builder_disk2mnt }}
-  args:
-    warn: false
 
 - name: Create important top-level directories
   shell: mkdir -p {{ rockylinux_ami_builder_disk2mnt }}/{boot,dev,proc,sys,etc}
-  args:
-    warn: false
 
 - name: Mount boot filesystem
   shell: mount {{ rockylinux_ami_builder_disk2dev }}p3 {{ rockylinux_ami_builder_disk2mnt }}/boot
-  args:
-    warn: false
 
 - name: Create mount point for the esp filesystem
   shell: mkdir -p {{ rockylinux_ami_builder_disk2mnt }}/boot/efi
-  args:
-    warn: false
 
 - name: Mount esp filesystem
   shell: mount {{ rockylinux_ami_builder_disk2dev }}p1 {{ rockylinux_ami_builder_disk2mnt }}/boot/efi
-  args:
-    warn: false
 
 - name: Create important directories
   shell: mkdir -p {{ rockylinux_ami_builder_disk2mnt }}{{ item }}
@@ -132,16 +123,12 @@
     - /etc/sysconfig
     - /etc/pki/rpm-gpg
     - /etc/NetworkManager/system-connections
-  args:
-    warn: false
 
 - name: Create /etc/resolv.conf for chrooted programs
   shell: cp -a /etc/resolv.conf {{ rockylinux_ami_builder_disk2mnt }}/etc/resolv.conf
 
 - name: Initiate RPM database in chroot environment
   shell: rpm --rebuilddb --root={{ rockylinux_ami_builder_disk2mnt }}
-  args:
-    warn: false
 
 - name: Create GPG key files
   copy: src={{ item }} dest={{ rockylinux_ami_builder_disk2mnt }}/etc/pki/rpm-gpg/{{ item }}
@@ -151,8 +138,6 @@
 
 - name: Install initial package
   shell: rpm -i --root={{ rockylinux_ami_builder_disk2mnt }} --nodeps {{ item }}
-  args:
-    warn: false
   with_items:
     - "{{ rockylinux_ami_builder_baseurl }}/r/{{ pkgrelease }}"
     - "{{ rockylinux_ami_builder_baseurl }}/r/{{ pkgrepos }}"
@@ -160,13 +145,9 @@
 - name: Prepare chroot environment mounts
   shell: mount --bind /{{ item }} {{ rockylinux_ami_builder_disk2mnt }}/{{ item }}
   with_items: ['proc', 'dev', 'sys']
-  args:
-    warn: false
 
 - name: Install base of the system in chroot environment
   shell: dnf --releasever=9 --installroot={{ rockylinux_ami_builder_disk2mnt }} install -y --nogpgcheck rpm-build yum
-  args:
-    warn: false
 
 - name: Install base package groups in chroot environment
   shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/dnf -y groupinstall base core

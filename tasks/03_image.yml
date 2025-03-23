@@ -14,18 +14,19 @@
       ctime: "{{ timestamp }}"
 
 - name: Stop the temporary instance
-  ec2:
-    aws_access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
-    aws_secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
+  amazon.aws.ec2_instance:
+    access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
+    secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
     region: "{{ rockylinux_ami_builder_aws_region }}"
-    instance_id: "{{ rockylinux_ami_builder_ec2_instance_id }}"
+    instance_ids:
+      - "{{ rockylinux_ami_builder_ec2_instance_id }}"
     state: stopped
     wait: True
 
 - name: Create a snapshot of the secondary volume
-  ec2_snapshot:
-    aws_access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
-    aws_secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
+  amazon.aws.ec2_snapshot:
+    access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
+    secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
     region: "{{ rockylinux_ami_builder_aws_region }}"
     volume_id: "{{ rockylinux_ami_builder_ebs_secondary_id }}"
     description: "{{ rockylinux_ami_builder_ami_fullname }}"
@@ -34,9 +35,9 @@
   register: mysnap
 
 - name: Create AMI from the temporary instance using the secondary volume
-  ec2_ami:
-    aws_access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
-    aws_secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
+  amazon.aws.ec2_ami:
+    access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
+    secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
     region: "{{ rockylinux_ami_builder_aws_region }}"
     name: "{{ rockylinux_ami_builder_ami_fullname }}"
     state: present
@@ -62,9 +63,9 @@
     dest: "{{ role_path }}/target/ami_id.txt"
 
 - name: Destroy secondary root volume of the temporary instance
-  ec2_vol:
-    aws_access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
-    aws_secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
+  amazon.aws.ec2_vol:
+    access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
+    secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
     region: "{{ rockylinux_ami_builder_aws_region }}"
     id: "{{ rockylinux_ami_builder_ebs_secondary_id }}"
     state: "absent"

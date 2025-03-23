@@ -1,5 +1,5 @@
-FROM alpine:3.14
-RUN apk add --no-cache --update bash curl openssh-client ansible py3-boto3 py3-boto
+FROM alpine:3.20
+RUN apk add --no-cache --update bash curl openssh-client ansible py3-boto3
 RUN mkdir -p /workdir
 RUN adduser -u 1000 -S user -G users
 RUN mkdir -p /home/user/.ssh

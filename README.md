@@ -31,7 +31,7 @@ allocated to grow the root file system or create other file systems with LVM.
 This Ansible role comes with the following requirements:
    * An AWS Account where to execute the creation of the AMI
    * An access key pair with privileges to use EC2 and Cloudformation
-   * Ansible 2.10.0 (or more recent) with the module for AWS and Boto3
+   * Ansible 2.17.0 (or more recent) with the module for AWS and Boto3
    * Permissions to launch the official Rocky Linux v9 AMIs for your architecture
 
 ## How it works
@@ -57,8 +57,8 @@ and only the new AMI and its corresponding EBS snapshot remain.
      for examples of parameters that can be used for x86_64 and arm64.
 
 ## Ansible
-This role has been tested using Ansible 2.10.7 as provided with Alpine Linux
-v3.14 but it should also work with more recent versions of Ansible. A dockerfile
+This role has been tested using Ansible 2.17.0 as provided with Alpine Linux
+v3.20 but it should also work with more recent versions of Ansible. A dockerfile
 has been provided so you can run a container which has this version of Ansible
 which is known to work with this role and which has all dependencies required
 (ansible and python modules). You will have to mount volumes to give the container

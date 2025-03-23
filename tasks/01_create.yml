@@ -1,8 +1,8 @@
 ---
 - name: Create temporary VPC and EC2 instance for creating the AMI
-  cloudformation:
-    aws_access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
-    aws_secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
+  amazon.aws.cloudformation:
+    access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
+    secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
     stack_name: "{{ rockylinux_ami_builder_stack_name }}"
     state: "present"
     region: "{{ rockylinux_ami_builder_aws_region }}"
@@ -36,9 +36,9 @@
     name: ami_builder
 
 - name: Get ID of root EBS volumes
-  ec2_vol_info:
-    aws_access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
-    aws_secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
+  amazon.aws.ec2_vol_info:
+    access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
+    secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
     region: "{{ rockylinux_ami_builder_aws_region }}"
     filters:
       attachment.instance-id: "{{ stack_data.stack_outputs.Ec2InstanceId }}"
@@ -47,9 +47,9 @@
   register: fact_ebs_root
 
 - name: Get ID of secondary EBS volumes
-  ec2_vol_info:
-    aws_access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
-    aws_secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
+  amazon.aws.ec2_vol_info:
+    access_key: "{{ rockylinux_ami_builder_aws_access_key | default('') }}"
+    secret_key: "{{ rockylinux_ami_builder_aws_secret_key | default('') }}"
     region: "{{ rockylinux_ami_builder_aws_region }}"
     filters:
       attachment.instance-id: "{{ stack_data.stack_outputs.Ec2InstanceId }}"
