@@ -131,6 +131,7 @@
     - /var/lib/rpm
     - /etc/sysconfig
     - /etc/pki/rpm-gpg
+    - /etc/NetworkManager/system-connections
   args:
     warn: false
 
@@ -173,9 +174,13 @@
 - name: Install cloud-init and cloud-utils-growpart
   shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/dnf -y install epel-release cloud-init cloud-utils-growpart
 
+- name: Remove legacy network configuration files
+  shell: rm -f {{ rockylinux_ami_builder_disk2mnt }}/etc/sysconfig/network-scripts/*
+
 - name: Create important configuration files
   template: src={{ item }}.j2 dest={{ rockylinux_ami_builder_disk2mnt }}/{{ item }}
   with_items:
+    - etc/NetworkManager/system-connections/System-eth0.nmconnection
     - etc/sysconfig/network
     - etc/ssh/sshd_config
     - etc/cloud/cloud.cfg
