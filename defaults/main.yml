@@ -10,6 +10,11 @@ rockylinux_ami_builder_disktype: 'gp3'
 rockylinux_ami_builder_rootsize: '4096M'
 rockylinux_ami_builder_username: 'rocky'
 
+# Provide the sha-512 hash of the password you want to set for the root user if required
+# This is useful to be able to connect to the instance using the serial console
+# You can create the hash for a password by running the following command: mkpasswd -m sha-512 YourNewPassword123
+rockylinux_ami_builder_rootpass: ''
+
 # Architecture for which to build the AMI (must be either 'x86_64' or 'arm64')
 rockylinux_ami_builder_architecture: 'x86_64'
 

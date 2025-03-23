@@ -204,6 +204,10 @@
 - name: Disable the kdump service
   shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/systemctl disable kdump
 
+- name: Set the password for the root user if one has been specified
+  shell: usermod --root {{ rockylinux_ami_builder_disk2mnt }} --password '{{ rockylinux_ami_builder_rootpass }}' root
+  when: rockylinux_ami_builder_rootpass != ''
+
 - name: Unmount chroot environment mounts
   shell: umount {{ rockylinux_ami_builder_disk2mnt }}/{{ item }}
   with_items: ['boot/efi', 'boot', 'proc', 'dev', 'sys']
