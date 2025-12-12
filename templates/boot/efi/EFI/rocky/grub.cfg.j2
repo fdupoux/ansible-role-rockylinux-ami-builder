@@ -1,0 +1,4 @@
+set btrfs_relative_path="yes"
+search --no-floppy --label boot --set=root
+set prefix=($root)/grub2
+configfile ($root)/grub2/grub.cfg

@@ -1,4 +1,4 @@
-FROM alpine:3.20
+FROM alpine:3.23
 RUN apk add --no-cache --update bash curl openssh-client ansible py3-boto3
 RUN mkdir -p /workdir
 RUN adduser -u 1000 -S user -G users

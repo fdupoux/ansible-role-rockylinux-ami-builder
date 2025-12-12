@@ -1,226 +1,366 @@
 {
-  "AWSTemplateFormatVersion" : "2010-09-09",
+    "AWSTemplateFormatVersion": "2010-09-09",
 
-  "Description" : "AWS CloudFormation Template to create a temporary VPC with a temporary EC2 instance",
+    "Description": "AWS CloudFormation Template to create a temporary VPC with a temporary EC2 instance",
 
-  "Parameters" : {
+    "Parameters": {
+        "StackName": {
+            "Description": "Name of the stack",
+            "Type": "String"
+        },
 
-    "StackName": {
-      "Description" : "Name of the stack",
-      "Type" : "String"
+        "InstanceType": {
+            "Description": "Temporary EC2 instance type",
+            "Type": "String",
+            "Default": "t3.small",
+            "AllowedValues": [
+                "t3.micro",
+                "t3.small",
+                "t3.medium",
+                "t3.large",
+                "t4g.micro",
+                "t4g.small",
+                "t4g.medium",
+                "t4g.large"
+            ],
+            "ConstraintDescription": "Must be a supported t3 or t4g instance type."
+        },
+
+        "AwsRegion": {
+            "Description": "Region where to create the resources",
+            "Type": "String"
+        },
+
+        "Architecture": {
+            "Description": "Architecture of the AMI to build (either 'amd64' or 'arm64')",
+            "Type": "String",
+            "Default": "amd64",
+            "AllowedValues": ["amd64", "arm64"]
+        },
+
+        "KeyName": {
+            "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+            "Type": "AWS::EC2::KeyPair::KeyName"
+        },
+
+        "DiskSizeGb": {
+            "Description": "Total size in GB of the disk used as a template to create the new AMI",
+            "Type": "Number"
+        },
+
+        "DiskDevice": {
+            "Description": "Device name for the second volume which is the template for the AMI",
+            "Type": "String"
+        },
+
+        "SSHLocation": {
+            "Description": " The IP address range that can be used to SSH to the EC2 instances",
+            "Type": "String",
+            "MinLength": "9",
+            "MaxLength": "18",
+            "Default": "0.0.0.0/0",
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+            "ConstraintDescription": "must be a valid IP CIDR range of the form x.x.x.x/x."
+        },
+
+        "CidrBase": {
+            "Description": "First two numbers in the IP range allocated to this stack (eg: '10.89')",
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})",
+            "Type": "String"
+        }
     },
 
-    "InstanceType" : {
-      "Description" : "Temporary EC2 instance type",
-      "Type" : "String",
-      "Default" : "t3.small",
-      "AllowedValues" : ["t3.micro", "t3.small", "t3.medium", "t3.large", "t4g.micro", "t4g.small", "t4g.medium", "t4g.large"],
-      "ConstraintDescription" : "Must be a supported t3 or t4g instance type."
+    "Mappings": {
+        "AwsRegion2RockyLinuxAmi": {
+            "ap-south-2": {
+                "amd64": "ami-0a7518b444c685c7f",
+                "arm64": "ami-0db6598aa1c1666f6"
+            },
+            "ap-south-1": {
+                "amd64": "ami-032a4e21bd0dcee7f",
+                "arm64": "ami-0abd136b3e5560750"
+            },
+            "eu-south-1": {
+                "amd64": "ami-0ab1b03b3dfb975c7",
+                "arm64": "ami-0c9a5bc355fe0dcbb"
+            },
+            "eu-south-2": {
+                "amd64": "ami-0715ff538886c7cf1",
+                "arm64": "ami-0dd73342fe1c2f08b"
+            },
+            "me-central-1": {
+                "amd64": "ami-04e42517e725ab8df",
+                "arm64": "ami-0cb40664c067b7ca0"
+            },
+            "il-central-1": {
+                "amd64": "ami-00fb62c09d857a75a",
+                "arm64": "ami-019c718ed86894321"
+            },
+            "ca-central-1": {
+                "amd64": "ami-01c98b587b54d1f6d",
+                "arm64": "ami-07307662d84ee40ce"
+            },
+            "ap-east-2": {
+                "amd64": "ami-02200815eb5b9845d",
+                "arm64": "ami-0914976290d0aeb41"
+            },
+            "mx-central-1": {
+                "amd64": "ami-0ad72c4a26e6c7e59",
+                "arm64": "ami-0d6962c4241ee7ead"
+            },
+            "eu-central-1": {
+                "amd64": "ami-0af902761124b7a40",
+                "arm64": "ami-0f6a9ada15335045a"
+            },
+            "eu-central-2": {
+                "amd64": "ami-0e29450e7bb2fc5b8",
+                "arm64": "ami-0326058ea6b0ab235"
+            },
+            "us-west-1": {
+                "amd64": "ami-047aeb458de8896ae",
+                "arm64": "ami-047c5166859f4e6a6"
+            },
+            "us-west-2": {
+                "amd64": "ami-0c7a0328dbbc725de",
+                "arm64": "ami-0abd6bcdfcc19a0f2"
+            },
+            "af-south-1": {
+                "amd64": "ami-01293359304c044e2",
+                "arm64": "ami-04e7b802ffe43fc59"
+            },
+            "eu-west-3": {
+                "amd64": "ami-0b931e30fc26b58f8",
+                "arm64": "ami-0263b364200b156b5"
+            },
+            "eu-north-1": {
+                "amd64": "ami-060dbe3702e92bd82",
+                "arm64": "ami-0ea05a919ca941fc8"
+            },
+            "eu-west-2": {
+                "amd64": "ami-0cadfbbb28521197e",
+                "arm64": "ami-0c037a0e64445c8a0"
+            },
+            "eu-west-1": {
+                "amd64": "ami-06f492a0d59d42405",
+                "arm64": "ami-0f93cb151021b3621"
+            },
+            "ap-northeast-3": {
+                "amd64": "ami-069d27d57135fc4d3",
+                "arm64": "ami-0d9c9063fbf4ee397"
+            },
+            "ap-northeast-2": {
+                "amd64": "ami-062748fa168ed7aca",
+                "arm64": "ami-0c9ad35c7be096c4d"
+            },
+            "ap-northeast-1": {
+                "amd64": "ami-06e91d3c7f16b46ae",
+                "arm64": "ami-00644f3595afb786b"
+            },
+            "me-south-1": {
+                "amd64": "ami-0d24e19a8d135d5cd",
+                "arm64": "ami-0d2055ec129fd4fe9"
+            },
+            "sa-east-1": {
+                "amd64": "ami-045f1746877c01c45",
+                "arm64": "ami-01a19e01a0bcb7fa0"
+            },
+            "ap-east-1": {
+                "amd64": "ami-0231328e19a0d26e5",
+                "arm64": "ami-0e19e628ded346cfc"
+            },
+            "ca-west-1": {
+                "amd64": "ami-055c18576891cfde8",
+                "arm64": "ami-0250253f01a6cda13"
+            },
+            "ap-southeast-1": {
+                "amd64": "ami-049e9fed52b9fbce6",
+                "arm64": "ami-00c7fdefd3dcef32e"
+            },
+            "ap-southeast-2": {
+                "amd64": "ami-0fd699f82b6972489",
+                "arm64": "ami-0ab0cb2713008bbb0"
+            },
+            "ap-southeast-3": {
+                "amd64": "ami-0d4f209595b61db8a",
+                "arm64": "ami-0e4517be1b2a2d997"
+            },
+            "ap-southeast-4": {
+                "amd64": "ami-0b6a9dfe978efba8e",
+                "arm64": "ami-0e55eedddcbde1f38"
+            },
+            "us-east-1": {
+                "amd64": "ami-05cdef38db43f1afd",
+                "arm64": "ami-059807ea93f3306ee"
+            },
+            "ap-southeast-5": {
+                "amd64": "ami-0580e0687cb3c3bd5",
+                "arm64": "ami-0d1bd3ca8a28845f4"
+            },
+            "us-east-2": {
+                "amd64": "ami-00c659dce896f9980",
+                "arm64": "ami-02768f31838d9b42d"
+            },
+            "ap-southeast-7": {
+                "amd64": "ami-0208e6ce37c0b61da",
+                "arm64": "ami-00c4df918ccd52867"
+            }
+        }
     },
 
-    "AwsRegion": {
-      "Description" : "Region where to create the resources",
-      "Type" : "String"
+    "Resources": {
+        "VPC": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "CidrBlock": {
+                    "Fn::Join": [".", [{ "Ref": "CidrBase" }, "0.0/16"]]
+                },
+                "Tags": [{ "Key": "Name", "Value": { "Ref": "StackName" } }]
+            }
+        },
+
+        "Subnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": { "Ref": "VPC" },
+                "CidrBlock": {
+                    "Fn::Join": [".", [{ "Ref": "CidrBase" }, "1.0/24"]]
+                },
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } }
+                ]
+            }
+        },
+
+        "InternetGateway": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } }
+                ]
+            }
+        },
+
+        "AttachGateway": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "VpcId": { "Ref": "VPC" },
+                "InternetGatewayId": { "Ref": "InternetGateway" }
+            }
+        },
+
+        "RouteTable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": { "Ref": "VPC" },
+                "Tags": [
+                    { "Key": "Application", "Value": { "Ref": "AWS::StackId" } }
+                ]
+            }
+        },
+
+        "Route": {
+            "Type": "AWS::EC2::Route",
+            "DependsOn": "AttachGateway",
+            "Properties": {
+                "RouteTableId": { "Ref": "RouteTable" },
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "GatewayId": { "Ref": "InternetGateway" }
+            }
+        },
+
+        "SubnetRouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": { "Ref": "Subnet" },
+                "RouteTableId": { "Ref": "RouteTable" }
+            }
+        },
+
+        "IPAddress": {
+            "Type": "AWS::EC2::EIP",
+            "DependsOn": "AttachGateway",
+            "Properties": {
+                "Domain": "vpc",
+                "InstanceId": { "Ref": "AmiBuilderInstance" }
+            }
+        },
+
+        "InstanceSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "VpcId": { "Ref": "VPC" },
+                "GroupDescription": "Enable SSH access via port 22",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": { "Ref": "SSHLocation" }
+                    }
+                ]
+            }
+        },
+
+        "AmiBuilderInstance": {
+            "Type": "AWS::EC2::Instance",
+            "DependsOn": "AttachGateway",
+            "Properties": {
+                "ImageId": {
+                    "Fn::FindInMap": [
+                        "AwsRegion2RockyLinuxAmi",
+                        { "Ref": "AwsRegion" },
+                        { "Ref": "Architecture" }
+                    ]
+                },
+                "InstanceType": { "Ref": "InstanceType" },
+                "KeyName": { "Ref": "KeyName" },
+                "SubnetId": { "Ref": "Subnet" },
+                "SecurityGroupIds": [{ "Ref": "InstanceSecurityGroup" }],
+                "Tags": [{ "Key": "Name", "Value": "rockylinux-ami-builder" }]
+            }
+        },
+
+        "TemplateVolume": {
+            "Type": "AWS::EC2::Volume",
+            "Properties": {
+                "Size": { "Ref": "DiskSizeGb" },
+                "VolumeType": "gp3",
+                "AvailabilityZone": {
+                    "Fn::GetAtt": ["AmiBuilderInstance", "AvailabilityZone"]
+                }
+            },
+            "DeletionPolicy": "Delete"
+        },
+
+        "TemplateVolumeAttachment": {
+            "Type": "AWS::EC2::VolumeAttachment",
+            "Properties": {
+                "InstanceId": { "Ref": "AmiBuilderInstance" },
+                "VolumeId": { "Ref": "TemplateVolume" },
+                "Device": { "Ref": "DiskDevice" }
+            }
+        }
     },
 
-    "Architecture": {
-      "Description" : "Architecture of the AMI to build (either 'amd64' or 'arm64')",
-      "Type" : "String",
-      "Default" : "amd64",
-      "AllowedValues" : ["amd64", "arm64"]
-    },
+    "Outputs": {
+        "Ec2PublicIpAddr": {
+            "Value": { "Fn::GetAtt": ["AmiBuilderInstance", "PublicIp"] },
+            "Description": "Public IP address of the temporary EC2 instance"
+        },
 
-    "KeyName": {
-      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instance",
-      "Type": "AWS::EC2::KeyPair::KeyName"
-    },
+        "Ec2InstanceId": {
+            "Value": { "Ref": "AmiBuilderInstance" },
+            "Description": "EC2 instance ID"
+        },
 
-    "DiskSizeGb": {
-      "Description" : "Total size in GB of the disk used as a template to create the new AMI",
-      "Type" : "Number"
-    },
+        "TemplateVolumeId": {
+            "Value": { "Ref": "TemplateVolume" },
+            "Description": "Template Volume ID"
+        },
 
-    "DiskDevice": {
-      "Description" : "Device name for the second volume which is the template for the AMI",
-      "Type" : "String"
-    },
-
-    "SSHLocation" : {
-      "Description" : " The IP address range that can be used to SSH to the EC2 instances",
-      "Type": "String",
-      "MinLength": "9",
-      "MaxLength": "18",
-      "Default": "0.0.0.0/0",
-      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
-      "ConstraintDescription": "must be a valid IP CIDR range of the form x.x.x.x/x."
-    },
-
-    "CidrBase": {
-      "Description" : "First two numbers in the IP range allocated to this stack (eg: '10.89')",
-      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})",
-      "Type" : "String"
+        "VpcId": {
+            "Description": "The VPC ID",
+            "Value": { "Ref": "VPC" }
+        }
     }
-
-  },
-
-  "Mappings" : {
-    "AwsRegion2RockyLinuxAmi" : {
-      "us-east-1"        : {"amd64" : "ami-0cce0fd28f5ae1c16", "arm64" : "ami-00b0dcadee599a758"},
-      "us-east-2"        : {"amd64" : "ami-013b70fe77d288975", "arm64" : "ami-0a4ca78b119e1b2c4"},
-      "us-west-1"        : {"amd64" : "ami-0565bb3165a897d89", "arm64" : "ami-0613fcbcf8ac10955"},
-      "us-west-2"        : {"amd64" : "ami-0c6ad0cb888dc015a", "arm64" : "ami-0d591df4a537c24fc"},
-      "ap-south-1"       : {"amd64" : "ami-0513a35b6dde0be00", "arm64" : "ami-0cb24451efb0e807e"},
-      "ap-northeast-1"   : {"amd64" : "ami-054929b521ab4b542", "arm64" : "ami-01aa25ac6fa78cce1"},
-      "ap-northeast-2"   : {"amd64" : "ami-0181531710ee41148", "arm64" : "ami-02d35205aa1a0f6c9"},
-      "ap-northeast-3"   : {"amd64" : "ami-0f2f53e190dc1dc4f", "arm64" : "ami-0bcb5f23007ad2985"},
-      "ap-southeast-1"   : {"amd64" : "ami-0255a102dbb96cef7", "arm64" : "ami-0c7c89825e02c8db1"},
-      "ap-southeast-2"   : {"amd64" : "ami-02da9facaa1d0b6bd", "arm64" : "ami-036af2e62fdf543b9"},
-      "eu-central-1"     : {"amd64" : "ami-0414d15e93b201470", "arm64" : "ami-0ae0e088f1170391d"},
-      "eu-west-1"        : {"amd64" : "ami-06cce7b9e26e82474", "arm64" : "ami-0ba529caebf80385d"},
-      "eu-west-2"        : {"amd64" : "ami-04fe632f7f0954fe7", "arm64" : "ami-0723dd316a68a3ec8"},
-      "eu-west-3"        : {"amd64" : "ami-06ca0d6ccc3e7a5ce", "arm64" : "ami-000d7efc6c601dba8"},
-      "eu-north-1"       : {"amd64" : "ami-06c1cb612a06c3cff", "arm64" : "ami-0ef3b1b9aca44893b"},
-      "me-central-1"     : {"amd64" : "ami-0817a73ca1752acd5", "arm64" : "ami-0e6ec5db88f73d607"},
-      "me-south-1"       : {"amd64" : "ami-013dbdc0a3e6b4c39", "arm64" : "ami-03f1a5113ed8b2dd7"},
-      "sa-east-1"        : {"amd64" : "ami-0ec9d7ece5f35188c", "arm64" : "ami-0fe18ca139b0b5dde"}
-    }
-  },
-
-  "Resources" : {
-
-    "VPC" : {
-      "Type" : "AWS::EC2::VPC",
-      "Properties" : {
-        "CidrBlock" : { "Fn::Join" : [ ".", [ { "Ref": "CidrBase" }, "0.0/16" ] ] },
-        "Tags" : [ {"Key" : "Name", "Value" : { "Ref" : "StackName"} } ]
-      }
-    },
-
-    "Subnet" : {
-      "Type" : "AWS::EC2::Subnet",
-      "Properties" : {
-        "VpcId" : { "Ref" : "VPC" },
-        "CidrBlock" : { "Fn::Join" : [ ".", [ { "Ref": "CidrBase" }, "1.0/24" ] ] },
-        "Tags" : [ {"Key" : "Application", "Value" : { "Ref" : "AWS::StackId"} } ]
-      }
-    },
-
-    "InternetGateway" : {
-      "Type" : "AWS::EC2::InternetGateway",
-      "Properties" : {
-        "Tags" : [ {"Key" : "Application", "Value" : { "Ref" : "AWS::StackId"} } ]
-      }
-    },
-
-    "AttachGateway" : {
-       "Type" : "AWS::EC2::VPCGatewayAttachment",
-       "Properties" : {
-         "VpcId" : { "Ref" : "VPC" },
-         "InternetGatewayId" : { "Ref" : "InternetGateway" }
-       }
-    },
-
-    "RouteTable" : {
-      "Type" : "AWS::EC2::RouteTable",
-      "Properties" : {
-        "VpcId" : {"Ref" : "VPC"},
-        "Tags" : [ {"Key" : "Application", "Value" : { "Ref" : "AWS::StackId"} } ]
-      }
-    },
-
-    "Route" : {
-      "Type" : "AWS::EC2::Route",
-      "DependsOn" : "AttachGateway",
-      "Properties" : {
-        "RouteTableId" : { "Ref" : "RouteTable" },
-        "DestinationCidrBlock" : "0.0.0.0/0",
-        "GatewayId" : { "Ref" : "InternetGateway" }
-      }
-    },
-
-    "SubnetRouteTableAssociation" : {
-      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties" : {
-        "SubnetId" : { "Ref" : "Subnet" },
-        "RouteTableId" : { "Ref" : "RouteTable" }
-      }
-    },
-
-    "IPAddress" : {
-      "Type" : "AWS::EC2::EIP",
-      "DependsOn" : "AttachGateway",
-      "Properties" : {
-        "Domain" : "vpc",
-        "InstanceId" : { "Ref" : "AmiBuilderInstance" }
-      }
-    },
-
-    "InstanceSecurityGroup" : {
-      "Type" : "AWS::EC2::SecurityGroup",
-      "Properties" : {
-        "VpcId" : { "Ref" : "VPC" },
-        "GroupDescription" : "Enable SSH access via port 22",
-        "SecurityGroupIngress" : [
-          {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "SSHLocation"}}
-         ]
-      }
-    },
-
-    "AmiBuilderInstance" : {
-      "Type" : "AWS::EC2::Instance",
-      "DependsOn" : "AttachGateway",
-      "Properties" : {
-        "ImageId" : { "Fn::FindInMap" : [ "AwsRegion2RockyLinuxAmi", { "Ref" : "AwsRegion" }, { "Ref" : "Architecture" }] },
-        "InstanceType" : { "Ref" : "InstanceType" },
-        "KeyName" : { "Ref" : "KeyName" },
-        "SubnetId" : { "Ref" : "Subnet" },
-        "SecurityGroupIds": [{ "Ref" : "InstanceSecurityGroup" }],
-        "Tags" : [ {"Key" : "Name", "Value" : "rockylinux-ami-builder"} ]
-      }
-    },
-
-    "TemplateVolume" : {
-      "Type" : "AWS::EC2::Volume",
-      "Properties" : {
-        "Size" : { "Ref" : "DiskSizeGb" },
-        "VolumeType" : "gp3",
-        "AvailabilityZone" : { "Fn::GetAtt" : [ "AmiBuilderInstance", "AvailabilityZone" ] }
-      },
-      "DeletionPolicy" : "Delete"
-    },
-
-    "TemplateVolumeAttachment" : {
-      "Type" : "AWS::EC2::VolumeAttachment",
-      "Properties" : {
-        "InstanceId" : { "Ref" : "AmiBuilderInstance" },
-        "VolumeId"  : { "Ref" : "TemplateVolume" },
-        "Device" : { "Ref" : "DiskDevice" }
-      }
-    }
-
-  },
-
-  "Outputs" : {
-
-    "Ec2PublicIpAddr" : {
-      "Value" : { "Fn::GetAtt" : ["AmiBuilderInstance", "PublicIp"] },
-      "Description" : "Public IP address of the temporary EC2 instance"
-    },
-
-    "Ec2InstanceId" : {
-      "Value": { "Ref": "AmiBuilderInstance" },
-      "Description" : "EC2 instance ID"
-    },
-
-    "TemplateVolumeId" : {
-      "Value": { "Ref": "TemplateVolume" },
-      "Description" : "Template Volume ID"
-    },
-
-    "VpcId": {
-      "Description": "The VPC ID",
-      "Value": { "Ref": "VPC" }
-    }
-
-  }
 }

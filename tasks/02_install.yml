@@ -17,12 +17,12 @@
   when: sestatus.stdout.find('Enforcing') == 0
 
 - name: Determine latest version of the rocky-release package
-  shell: set -e -o pipefail && curl --silent --location {{ rockylinux_ami_builder_baseurl }}/r | grep --only-matching 'rocky-release-9[^"]*.rpm' | tail -n1
+  shell: set -e -o pipefail && curl --silent --location {{ rockylinux_ami_builder_baseurl }}/r | grep --only-matching 'rocky-release-10[^"]*.rpm' | tail -n1
   register: regpkgrelease
   changed_when: False
 
 - name: Determine latest version of the rocky-repos package
-  shell: set -e -o pipefail && curl --silent --location {{ rockylinux_ami_builder_baseurl }}/r | grep --only-matching 'rocky-repos-9[^"]*.rpm' | tail -n1
+  shell: set -e -o pipefail && curl --silent --location {{ rockylinux_ami_builder_baseurl }}/r | grep --only-matching 'rocky-repos-10[^"]*.rpm' | tail -n1
   register: regpkgrepos
   changed_when: False
 
@@ -119,6 +119,8 @@
 - name: Create important directories
   shell: mkdir -p {{ rockylinux_ami_builder_disk2mnt }}{{ item }}
   with_items:
+    - /boot/efi/EFI/BOOT
+    - /boot/efi/EFI/rocky
     - /var/lib/rpm
     - /etc/sysconfig
     - /etc/pki/rpm-gpg
@@ -134,7 +136,7 @@
   copy: src={{ item }} dest={{ rockylinux_ami_builder_disk2mnt }}/etc/pki/rpm-gpg/{{ item }}
   with_items:
     - RPM-GPG-KEY-rockyofficial
-    - RPM-GPG-KEY-Rocky-9
+    - RPM-GPG-KEY-Rocky-10
 
 - name: Install initial package
   shell: rpm -i --root={{ rockylinux_ami_builder_disk2mnt }} --nodeps {{ item }}
@@ -143,11 +145,11 @@
     - "{{ rockylinux_ami_builder_baseurl }}/r/{{ pkgrepos }}"
 
 - name: Prepare chroot environment mounts
-  shell: mount --bind /{{ item }} {{ rockylinux_ami_builder_disk2mnt }}/{{ item }}
-  with_items: ['proc', 'dev', 'sys']
+  shell: mount --bind {{ item }} {{ rockylinux_ami_builder_disk2mnt }}{{ item }}
+  with_items: ['/proc', '/dev', '/sys', '/sys/firmware/efi/efivars']
 
 - name: Install base of the system in chroot environment
-  shell: dnf --releasever=9 --installroot={{ rockylinux_ami_builder_disk2mnt }} install -y --nogpgcheck rpm-build yum
+  shell: dnf --releasever=10 --installroot={{ rockylinux_ami_builder_disk2mnt }} install -y --nogpgcheck rpm-build yum
 
 - name: Install base package groups in chroot environment
   shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/dnf -y groupinstall base core
@@ -161,6 +163,8 @@
 - name: Create important configuration files
   template: src={{ item }}.j2 dest={{ rockylinux_ami_builder_disk2mnt }}/{{ item }}
   with_items:
+    - boot/efi/EFI/BOOT/grub.cfg
+    - boot/efi/EFI/rocky/grub.cfg
     - etc/NetworkManager/system-connections/System-eth0.nmconnection
     - etc/sysconfig/network
     - etc/ssh/sshd_config
@@ -170,14 +174,18 @@
     - etc/fstab
 
 - name: Install kernel and grub packages
-  shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/dnf -y install kernel kernel-devel grub2 grubby grub2-efi grub2-tools shim efibootmgr
+  shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/dnf -y install kernel kernel-devel grub2 grubby grub2-efi grub2-efi-x64-modules grub2-tools shim efibootmgr
 
 - name: Generate grub2 configuration file
   shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
 
-- name: Execute grub2 installer (for Legacy BIOS only)
-  shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /sbin/grub2-install {{ rockylinux_ami_builder_disk2dev }}
-  when: rockylinux_ami_builder_architecture == 'x86_64'
+- name: Get the state of the EFI boot
+  shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /sbin/efibootmgr
+  register: efiboot
+
+- name: Show the state of the EFI boot
+  debug:
+    var: efiboot
 
 - name: Clean installation packages
   shell: chroot {{ rockylinux_ami_builder_disk2mnt }} /bin/dnf clean all
@@ -190,8 +198,8 @@
   when: rockylinux_ami_builder_rootpass != ''
 
 - name: Unmount chroot environment mounts
-  shell: umount {{ rockylinux_ami_builder_disk2mnt }}/{{ item }}
-  with_items: ['boot/efi', 'boot', 'proc', 'dev', 'sys']
+  shell: umount {{ rockylinux_ami_builder_disk2mnt }}{{ item }}
+  with_items: ['/boot/efi', '/sys/firmware/efi/efivars', '/boot', '/proc', '/dev', '/sys']
 
 - name: Unmount chroot environment root
   shell: umount {{ rockylinux_ami_builder_disk2mnt }}
