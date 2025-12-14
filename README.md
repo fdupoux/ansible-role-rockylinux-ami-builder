@@ -11,11 +11,10 @@ Manager) and to control all packages which are going to be installed in order to
 get a really minimal system.
 
 ## Features
-This Ansible role can produces Rocky Linux v9 AMI images for both x86_64
-and arm64 architectures in AWS. These images can be used with modern instance
-types such as t3/t3a and t4g. On x86_64 it boots the system in Legacy BIOS mode,
-and on arm64 it boots in UEFI mode, as these are the default boot modes with
-AWS for these two architectures. The AMI is configured to have both IPv4 and
+This Ansible role can produces Rocky Linux v10 AMI images for both x86_64
+and arm64 architectures in AWS. These images can be used with modern Nitro instance
+types such as t3/t3a and t4g. The new verison of this role creates AMI that boot
+in UEFI mode on both x86_64 and arm64. The AMI is configured to have both IPv4 and
 IPv6 enabled, and it is possible to connect to the instance using IPv6 only,
 as you may want to run instances without an EIP, as AWS have introduced relatively
 high charges to attach public IPv4 external IP addresses on EC2 instnaces.
@@ -31,8 +30,8 @@ allocated to grow the root file system or create other file systems with LVM.
 This Ansible role comes with the following requirements:
    * An AWS Account where to execute the creation of the AMI
    * An access key pair with privileges to use EC2 and Cloudformation
-   * Ansible 2.17.0 (or more recent) with the module for AWS and Boto3
-   * Permissions to launch the official Rocky Linux v9 AMIs for your architecture
+   * Ansible 2.19 (or more recent) with the module for AWS and Boto3
+   * Permissions to launch the official Rocky Linux AMIs for your architecture
 
 ## How it works
 This Ansible role works by first using Cloud Formations to create a temporary
@@ -49,20 +48,20 @@ and only the new AMI and its corresponding EBS snapshot remain.
    * Install this role using ansible-galaxy
      https://galaxy.ansible.com/fdupoux/rockylinux_ami_builder
    * Subscribe to the following official Rocky Linux AMIs in the AWS marketplace:
-     - https://aws.amazon.com/marketplace/pp/prodview-6ihwigagrts66
-     - https://aws.amazon.com/marketplace/pp/prodview-ygp66mwgbl2ii
+     - https://aws.amazon.com/marketplace/pp/prodview-z7hzo3jvdgrmi
+     - https://aws.amazon.com/marketplace/pp/prodview-77vz5zvv3ndiy
    * Use this role from an ansible playbook and make sure you pass all the
      important parameters which are defined in the defaults/main.yml file.
      Please have a look at the example playbook provided in the docs folder
      for examples of parameters that can be used for x86_64 and arm64.
 
 ## Ansible
-This role has been tested using Ansible 2.17.0 as provided with Alpine Linux
-v3.20 but it should also work with more recent versions of Ansible. A dockerfile
-has been provided so you can run a container which has this version of Ansible
-which is known to work with this role and which has all dependencies required
-(ansible and python modules). You will have to mount volumes to give the container
-access to your SSH Key, your AWS Access Key pair, the ansible role and playbook.
+This role has been tested using Ansible 2.19.4 but it should also work with more
+recent versions of Ansible. A dockerfile has been provided so you can run a
+container which has a version of Ansible which is known to work with this role
+and which has all dependencies required (ansible and python modules). You will
+have to mount volumes to give the container access to your SSH Key, your AWS
+Access Key pair, the ansible role and playbook.
 
 ## Instance types
 The creation of an AMI for x86_64 has been tested using a "t3.small" instance,

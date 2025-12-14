@@ -22,12 +22,12 @@ rockylinux_ami_builder_architecture: 'x86_64'
 rockylinux_ami_builder_ec2_type: "t3.small"
 
 # Which name and tags to set on the new AMI
-rockylinux_ami_builder_ami_name: "ami_rockylinux9_custom"
+rockylinux_ami_builder_ami_name: "ami_rockylinux10_custom"
 rockylinux_ami_builder_ami_tags:
-  description: 'Custom Rocky-Linux v9 image'
+  description: 'Custom Rocky-Linux v10 image'
   ami_type: 'minimal'
   os_name: 'rockylinux'
-  os_majver: '9'
+  os_majver: '10'
 
 # Range of addresses which are authorised to connect to the temporary instance (eg: "${your_home_ip}/32")
 rockylinux_ami_builder_allowip: '0.0.0.0/0'
@@ -46,4 +46,4 @@ rockylinux_ami_builder_rpmarch: "{{ rockylinux_ami_builder_arch1dict[rockylinux_
 rockylinux_ami_builder_tplarch: "{{ rockylinux_ami_builder_arch2dict[rockylinux_ami_builder_architecture] }}"
 
 # Address of the package repository
-rockylinux_ami_builder_baseurl: "https://download.rockylinux.org/pub/rocky/9/BaseOS/{{ rockylinux_ami_builder_rpmarch }}/os/Packages"
+rockylinux_ami_builder_baseurl: "https://download.rockylinux.org/pub/rocky/10/BaseOS/{{ rockylinux_ami_builder_rpmarch }}/os/Packages"
